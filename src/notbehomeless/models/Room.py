@@ -3,7 +3,7 @@ from notbehomeless.models.WebSite import WebSite
 
 class Room:
     def __init__(self, website: WebSite, title: str, price: float, location: str, link: str, size: int):
-        self.website = website.name
+        self.website = website
         self.title = title
         self.price = price
         self.location = location

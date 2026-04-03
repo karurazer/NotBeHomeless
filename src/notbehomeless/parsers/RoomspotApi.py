@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 
 from notbehomeless.models.WebSite import WebSite
 from src.notbehomeless.models.Room import Room
@@ -15,57 +15,70 @@ class RoomspotApi:
             "sort": "!reactionData.zoekprofielMatchOrder,-reactionData.zoekprofielMatchOrder,+reactionData.aangepasteTotaleHuurprijs"
         }
 
-    def _fetch(self):
-        response = requests.get(self.BASE_URL, params=self.params, timeout=10)
-        response.raise_for_status()
-        return response.json()
+    async def _fetch(self, session: aiohttp.ClientSession):
+        params = self.params.copy()
 
-    def get_all_rooms(self):
+        async with session.get(self.BASE_URL, params=params) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def get_all_rooms(self):
         rooms = []
         seen_links = set()
 
-        data = self._fetch()
-        page_count = data.get("_metadata", {}).get("page_count", None)
+        async with aiohttp.ClientSession() as session:
+            data = await self._fetch(session)
 
-        for page in range(page_count):
-            self.params["page"] = page
+            page_count = data.get("_metadata", {}).get("page_count", 0)
 
-            if page != 0:
-                data = self._fetch()
+            for page in range(page_count):
+                self.params["page"] = page
 
-            for item in data.get("data", []):
+                if page != 0:
+                    data = await self._fetch(session)
 
-                street = item.get("street", "")
-                house = item.get("houseNumber", "")
-                addition = item.get("houseNumberAddition", "")
+                for item in data.get("data", []):
 
-                price = item.get("totalRent")
-                location = item.get("city", {}).get("name")
-                size = item.get("areaDwelling")
+                    street = item.get("street", "")
+                    house = item.get("houseNumber", "")
+                    addition = item.get("houseNumberAddition", "")
 
-                title = f"{street} {house} {addition} {price}".strip()
+                    price = item.get("totalRent")
+                    location = item.get("city", {}).get("name")
+                    size = item.get("areaDwelling")
 
-                url_key = item.get("urlKey")
-                if not url_key:
-                    continue
+                    title = f"{street} {house} {addition}".strip()
 
-                link = f"https://www.roomspot.nl/aanbod/te-huur/details/{url_key}"
+                    url_key = item.get("urlKey")
+                    if not url_key:
+                        continue
+
+                    link = f"https://www.roomspot.nl/aanbod/te-huur/details/{url_key}"
 
 
-                if link in seen_links:
-                    continue
+                    if link in seen_links:
+                        continue
 
-                seen_links.add(link)
+                    seen_links.add(link)
 
-                room = Room(
-                    WebSite.ROOMSPOT,
-                    title,
-                    price,
-                    location,
-                    link,
-                    size
-                )
+                    room = Room(
+                        WebSite.ROOMSPOT,
+                        title,
+                        price,
+                        location,
+                        link,
+                        size
+                    )
 
-                rooms.append(room)
+                    rooms.append(room)
 
         return rooms
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    api = RoomspotApi()
+    rooms = asyncio.run(api.get_all_rooms())
+    for room in rooms:
+        print(room)
