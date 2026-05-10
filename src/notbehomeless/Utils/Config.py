@@ -13,10 +13,9 @@ class AuthData:
 
 
 def login_data(name: WebSite) -> AuthData:
-
     match name:
         case WebSite.ROOMSPOT:
-            return AuthData(os.getenv(f"{WebSite.ROOMSPOT.name}_LOGIN", ""), os.getenv(f"{WebSite.ROOMSPOT.name}_PASSWORD", ""))
+            return AuthData(os.getenv(f"{WebSite.ROOMSPOT.name}_LOGIN", ""),
+                            os.getenv(f"{WebSite.ROOMSPOT.name}_PASSWORD", ""))
 
     raise ValueError(f"No login data for {name}")
-

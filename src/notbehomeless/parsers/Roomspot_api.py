@@ -1,16 +1,18 @@
 import aiohttp
 from yarl import URL
-
 from notbehomeless.models.WebSite import WebSite
 from notbehomeless.models.Room import Room
-from notbehomeless.Utils.Utils import save_cookies, load_cookies
-from notbehomeless.Utils.Utils import is_token_expired
 from notbehomeless.Utils.Config import login_data
+from notbehomeless.Utils.Utils import load_cookies
+from notbehomeless.Utils.Utils import save_cookies
+from notbehomeless.Utils.Utils import is_token_expired
+
 
 class RoomspotApi:
     MAIN_URL = URL("https://www.roomspot.nl/")
     ROOMS_URL = URL("https://studentenenschede-aanbodapi.zig365.nl/api/v1/actueel-aanbod")
     LOGIN_URL = URL("https://www.roomspot.nl/portal/proxy/frontend/api/v1/oauth/token")
+    REFRESH_TOKEN_URL = URL("https://www.roomspot.nl/portal/account/frontend/loginbyservice/format/json")
 
     login_payload_template = {
         "grant_type": "password",
@@ -24,7 +26,9 @@ class RoomspotApi:
             "limit": 60,
             "locale": "nl_NL",
             "page": 0,
-            "sort": "!reactionData.zoekprofielMatchOrder,-reactionData.zoekprofielMatchOrder,+reactionData.aangepasteTotaleHuurprijs"
+            "sort": "!reactionData.zoekprofielMatchOrder,"
+                    "-reactionData.zoekprofielMatchOrder,"
+                    "+reactionData.aangepasteTotaleHuurprijs"
         }
 
     async def _fetch_rooms(self, session: aiohttp.ClientSession) -> dict:
@@ -86,8 +90,8 @@ class RoomspotApi:
 
     async def authorize(self, session: aiohttp.ClientSession, username: str, password: str):
         load_cookies(session, WebSite.ROOMSPOT.name)
-        if self._is_valid_session(session):
-            print("Session is still valid, no need to login again")
+        if await self.is_valid_session(session):
+            print("Already logged in to Roomspot")
             return
 
         login_payload = self.login_payload_template.copy()
@@ -103,9 +107,9 @@ class RoomspotApi:
 
             cookies = session.cookie_jar.filter_cookies(self.MAIN_URL)
             save_cookies(cookies, WebSite.ROOMSPOT.name)
-            print("Successfully logged in to Roomspot")
+            print("Successfully updated Roomspot cookies")
 
-    def _is_valid_session(self, session: aiohttp.ClientSession) -> bool:
+    async def is_valid_session(self, session: aiohttp.ClientSession) -> bool:
         try:
             cookies = session.cookie_jar.filter_cookies(self.MAIN_URL)
         except KeyError:
@@ -115,19 +119,27 @@ class RoomspotApi:
         if token is None:
             return False
 
-        return not is_token_expired(token.value)
+        if is_token_expired(token.value):
+            return False
 
-async def test_login():
+        async with session.post(self.REFRESH_TOKEN_URL) as r:
+            return r.status == 200
+
+
+
+async def test():
     async with aiohttp.ClientSession() as session:
         api = RoomspotApi()
-        user_data =  login_data(WebSite.ROOMSPOT)
+        user_data = login_data(WebSite.ROOMSPOT)
         username = user_data.login
         password = user_data.password
 
         await api.authorize(session, username=username, password=password)
-
+        rooms = await api.get_all_rooms(session)
+        for room in rooms:
+            print(room)
 
 if __name__ == "__main__":
     import asyncio
 
-    asyncio.run(test_login())
+    asyncio.run(test())

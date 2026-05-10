@@ -1,6 +1,11 @@
+import time
+import jwt
+from pathlib import Path
+import pickle
+from yarl import URL
+
 def save_cookies(cookies, name: str):
-    from pathlib import Path
-    import pickle
+
 
     url = Path(__file__).resolve().parent.parent / "storage" / "cookies" / f"{name}.pkl"
     url.parent.mkdir(parents=True, exist_ok=True)
@@ -10,9 +15,7 @@ def save_cookies(cookies, name: str):
 
 
 def load_cookies(session, name: str):
-    from pathlib import Path
-    import pickle
-    from yarl import URL
+
 
     url = Path(__file__).resolve().parent.parent / "storage" / "cookies" / f"{name}.pkl"
     if not url.exists():
@@ -26,8 +29,5 @@ def load_cookies(session, name: str):
 
 
 def is_token_expired(token):
-    import time
-    import jwt
-
     payload = jwt.decode(token, options={"verify_signature": False})
     return time.time() > payload["exp"] - 300  # Consider token expired if it's within 5 minutes of expiring
