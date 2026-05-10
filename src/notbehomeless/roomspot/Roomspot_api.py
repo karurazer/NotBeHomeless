@@ -6,6 +6,8 @@ from notbehomeless.Utils.Config import login_data
 from notbehomeless.Utils.Utils import load_cookies
 from notbehomeless.Utils.Utils import save_cookies
 from notbehomeless.Utils.Utils import is_token_expired
+from urllib.parse import parse_qs
+from notbehomeless.roomspot.Room_reaction_action import RoomReactionAction
 
 
 class RoomspotApi:
@@ -13,6 +15,9 @@ class RoomspotApi:
     ROOMS_URL = URL("https://studentenenschede-aanbodapi.zig365.nl/api/v1/actueel-aanbod")
     LOGIN_URL = URL("https://www.roomspot.nl/portal/proxy/frontend/api/v1/oauth/token")
     REFRESH_TOKEN_URL = URL("https://www.roomspot.nl/portal/account/frontend/loginbyservice/format/json")
+    REACT_ROOM_URL = URL("https://www.roomspot.nl/portal/object/frontend/react/format/json")
+    ROOM_INFO_URL = URL("https://www.roomspot.nl/portal/object/frontend/getobject/format/json")
+    ROOM_GET_FORM_SUBMIT_ONLY_CONFIG = URL("https://www.roomspot.nl/portal/core/frontend/getformsubmitonlyconfiguration/format/json")
 
     login_payload_template = {
         "grant_type": "password",
@@ -54,6 +59,7 @@ class RoomspotApi:
 
             for item in data.get("data", []):
 
+                id = item.get("id", "")
                 street = item.get("street", "")
                 house = item.get("houseNumber", "")
                 addition = item.get("houseNumberAddition", "")
@@ -77,6 +83,7 @@ class RoomspotApi:
 
                 room = Room(
                     WebSite.ROOMSPOT,
+                    id,
                     title,
                     price,
                     location,
@@ -87,6 +94,66 @@ class RoomspotApi:
                 rooms.append(room)
 
         return rooms
+
+    async def sign_for_room(self, session: aiohttp.ClientSession, room: Room):
+        room_info = await self.get_room_info(session, room.id)
+        reaction_data = room_info.get("result", {}).get("reactionData", {})
+        if reaction_data is None:
+            raise ValueError("No reaction data for room")
+
+        action = reaction_data.get("action", "")
+        match action:
+            case RoomReactionAction.ADD.value:
+                await self._handle_add_action(session, room, reaction_data)
+
+            case RoomReactionAction.REMOVE.value:
+                print(f"Room already registered:\n {room}\n===================")
+                return
+
+            case _:
+                raise NotImplementedError(
+                    f"Unknown action for signing up for room: {action}"
+                )
+
+    async def _handle_add_action(self, session: aiohttp.ClientSession, room: Room, reaction_data: dict):
+        url = reaction_data.get("url", "")
+        if not url:
+            raise ValueError("No URL for signing up for room")
+        params = parse_qs(url[1:])
+        add_id = int(params["add"][0])
+        dwelling_id = int(params["dwellingID"][0])
+
+        form_submit_only = await self.get_form_submit_only_config(session)
+        form = form_submit_only.get("form", {})
+        hash__ = form.get("elements", {}).get("__hash__", {}).get("initialData", "")
+        id__ = form.get("id", "")
+
+        payload = {
+            "add": add_id,
+            "dwellingID": dwelling_id,
+            "__hash__": str(hash__),
+            "__id__": str(id__)
+        }
+
+        async with session.post(self.REACT_ROOM_URL, data=payload) as response:
+            response.raise_for_status()
+            if response.status == 200:
+                print(f"|Successfully signed up for room:\n {room}\n===================")
+            return await response.json()
+
+    async def get_form_submit_only_config(self, session: aiohttp.ClientSession) -> dict:
+        async with session.get(self.ROOM_GET_FORM_SUBMIT_ONLY_CONFIG) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def get_room_info(self, session: aiohttp.ClientSession, room_id: int) -> dict:
+        payload = {"id": str(room_id)}
+        print(f"Getting room info for room id {room_id}")
+        async with session.get(self.ROOM_INFO_URL, params=payload) as response:
+            response.raise_for_status()
+            if response.status != 200:
+                print(f"Failed to get room info for room id {room_id}: {response.status}")
+            return await response.json()
 
     async def authorize(self, session: aiohttp.ClientSession, username: str, password: str):
         load_cookies(session, WebSite.ROOMSPOT.name)
@@ -125,21 +192,30 @@ class RoomspotApi:
         async with session.post(self.REFRESH_TOKEN_URL) as r:
             return r.status == 200
 
-
-
 async def test():
     async with aiohttp.ClientSession() as session:
         api = RoomspotApi()
-        user_data = login_data(WebSite.ROOMSPOT)
-        username = user_data.login
-        password = user_data.password
 
-        await api.authorize(session, username=username, password=password)
         rooms = await api.get_all_rooms(session)
         for room in rooms:
             print(room)
+        print("Total find rooms: ", len(rooms))
+
+async def test_sign():
+    async with aiohttp.ClientSession() as session:
+        api = RoomspotApi()
+
+        user_data = login_data(WebSite.ROOMSPOT)
+        username = user_data.login
+        password = user_data.password
+        await api.authorize(session, username=username, password=password)
+
+        rooms = await api.get_all_rooms(session)
+
+        if rooms:
+            await api.sign_for_room(session, rooms[0])
 
 if __name__ == "__main__":
     import asyncio
 
-    asyncio.run(test())
+    asyncio.run(test_sign())
