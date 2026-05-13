@@ -2,6 +2,9 @@
 Roomspot API client for authorization, room retrieval,
 and room reaction management.
 """
+import json
+
+import aiofiles
 import aiohttp
 from yarl import URL
 from notbehomeless.models.WebSite import WebSite
@@ -11,6 +14,7 @@ from notbehomeless.roomspot.autorizer import Authorizer
 from notbehomeless.roomspot.room_parser import RoomspotRoomParser
 from notbehomeless.roomspot.room_reactor import RoomReactor
 from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+
 
 class RoomspotApi:
     """
@@ -70,8 +74,12 @@ class RoomspotApi:
         """
             Fetch a single page of rooms from the Roomspot API.
         """
+        payload = None
+        async with aiofiles.open('hidden_filters.json', 'r') as f:
+            content = await f.read()
+            payload = json.loads(content)
 
-        async with session.get(self.ROOMS_URL, params=params) as response:
+        async with session.post(self.ROOMS_URL, params=params, json=payload) as response:
             response.raise_for_status()
             return await response.json()
 
@@ -95,9 +103,7 @@ class RoomspotApi:
             "limit": 50,
             "locale": "nl_NL",
             "page": 0,
-            "sort": "!reactionData.zoekprofielMatchOrder,"
-                    "-reactionData.zoekprofielMatchOrder,"
-                    "+reactionData.aangepasteTotaleHuurprijs"
+            "sort": "!reactionData.zoekprofielMatchOrder,-reactionData.zoekprofielMatchOrder,+reactionData.aangepasteTotaleHuurprijs"
         }
 
         rooms = []
@@ -124,22 +130,27 @@ class RoomspotApi:
 
                 seen_links.add(room.link)
                 rooms.append(room)
-
         return rooms
-
 
 
 async def test_room_retrieval():
     """
        Test room retrieval from Roomspot.
-       """
+    """
     async with aiohttp.ClientSession() as session:
         api = RoomspotApi()
+
+        user_data = login_data(WebSite.ROOMSPOT)
+        username = user_data.login
+        password = user_data.password
+        await api.authorize(session, username=username, password=password)
 
         rooms = await api.get_all_rooms(session)
         for room in rooms:
             print(room)
+
         print("Total find rooms: ", len(rooms))
+
 
 async def test_sign():
     """
@@ -156,13 +167,14 @@ async def test_sign():
         await api.authorize(session, username=username, password=password)
 
         rooms = await api.get_all_rooms(session)
-
+        print(rooms)
         if rooms:
             await api.sign_room(session, rooms[0])
             print("Waiting for 5 seconds before removing reaction...")
 
             await asyncio.sleep(5)
             await api.unsign_room(session, rooms[0])
+
 
 if __name__ == "__main__":
     import asyncio

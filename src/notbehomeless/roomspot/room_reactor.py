@@ -39,6 +39,10 @@ class RoomReactor:
         if not reaction_data:
             raise ValueError("No reaction data for room")
 
+        can_react = reaction_data.get("kanReageren", False)
+
+        if not can_react:
+            raise ValueError("Cannot react to room")
 
         url = reaction_data.get("url", "")
         if not url:

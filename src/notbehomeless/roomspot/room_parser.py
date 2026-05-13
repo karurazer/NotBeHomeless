@@ -1,5 +1,6 @@
 from notbehomeless.models.Room import Room
 from notbehomeless.models.WebSite import WebSite
+from datetime import datetime, timezone
 
 class RoomspotRoomParser:
     @staticmethod
@@ -10,10 +11,18 @@ class RoomspotRoomParser:
         addition = item.get("houseNumberAddition", "")
 
         price = float(item.get("totalRent", ""))
-        location = item.get("city", {}).get("name", "")
+        city = item.get("city", {}).get("name", "")
         size = float(item.get("areaDwelling", ""))
 
         title = f"{street} {house} {addition}".strip()
+        publication_date_raw = item.get("publicationDate", "")
+        closing_date_raw = item.get("closingDate", "")
+
+        if not publication_date_raw or not closing_date_raw:
+            return None
+
+        publication_date = datetime.fromisoformat(publication_date_raw.replace("Z", "+00:00"))
+        closing_date = datetime.fromisoformat(closing_date_raw.replace("Z", "+00:00"))
 
         url_key = item.get("urlKey")
         if not url_key:
@@ -21,13 +30,23 @@ class RoomspotRoomParser:
 
         link = f"https://www.roomspot.nl/aanbod/te-huur/details/{url_key}"
 
+        features = {
+            f.get("localizedLabel")
+            for f in item.get("specifiekeVoorzieningen", [])
+        }
 
         return Room(
             WebSite.ROOMSPOT,
             room_id,
             title,
-            price,
-            location,
             link,
-            size
+            price,
+            city,
+            size,
+            publication_date,
+            closing_date,
+            private_kitchen="Eigen keuken" in features,
+            private_bathroom="Eigen badkamer" in features,
+            furnished="Gemeubileerd" in features,
+            wifi="Incl. internet" in features
         )
