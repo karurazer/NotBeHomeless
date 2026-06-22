@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from notbehomeless.models.WebSite import WebSite
+from notbehomeless.models.website import Website
 from notbehomeless.roomspot.allocation_type import AllocationType
 from datetime import datetime
 
 @dataclass(slots=True)
 class Room:
-    website: WebSite
+    website: Website
 
     room_id: int
 
@@ -26,6 +26,10 @@ class Room:
     furnished: bool = False
     shared: bool = False
     wifi: bool = False
+
+    action: str = ""
+    can_react: bool = False
+    action_value: str = ""
 
     def __str__(self):
         details = [
@@ -48,7 +52,12 @@ class Room:
             f"📍 City: {self.city}\n"
             f"💰 Price: €{self.price}\n"
             f"📏 Size: {self.size} m²\n"
+            f"📅 Publication Date: {self.publication_date.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"📅 Closing Date: {self.closing_date.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"🔗 Link: {self.link}\n"
+            f"   Action: {self.action}\n"
+            f"   Can React: {'Yes' if self.can_react else 'No'}\n"
+            f"   Action value: {self.action_value}\n"
             f"{details_text + '\n' if details_text else ''}"
             f"{'=' * 50}"
         )

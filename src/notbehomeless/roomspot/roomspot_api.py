@@ -7,10 +7,12 @@ import json
 import aiofiles
 import aiohttp
 from yarl import URL
-from notbehomeless.models.WebSite import WebSite
-from notbehomeless.models.Room import Room
-from notbehomeless.Utils.Config import login_data
-from notbehomeless.roomspot.autorizer import Authorizer
+
+from notbehomeless.utils import helpers
+from notbehomeless.models.website import Website
+from notbehomeless.models.room import Room
+from notbehomeless.utils.config import login_data
+from notbehomeless.roomspot.authorizer import Authorizer
 from notbehomeless.roomspot.room_parser import RoomspotRoomParser
 from notbehomeless.roomspot.room_reactor import RoomReactor
 from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
@@ -46,12 +48,9 @@ class RoomspotApi:
         """
             Do an action (add/remove reaction) for the specified room.
         """
-        room_info = await self.get_room_info(session, room.room_id)
-        reaction_data = room_info.get("result", {}).get("reactionData", {})
         try:
             await self.reactor.react_to_room(
                 session,
-                reaction_data,
                 room,
                 action
             )
@@ -70,14 +69,25 @@ class RoomspotApi:
         """
         await self._room_action(session, room, RoomReactionAction.REMOVE)
 
+    async def perform_available_room_action(self, session: aiohttp.ClientSession, room: Room):
+        """
+            Perform the available action (add/remove reaction) for the specified room.
+        """
+        if room.can_react:
+            if room.action == RoomReactionAction.ADD.value:
+                await self.sign_room(session, room)
+            elif room.action == RoomReactionAction.REMOVE.value:
+                await self.unsign_room(session, room)
+            else:
+                print(f"Unknown action '{room.action}' for room {room.room_id}.")
+        else:
+            print(f"No available action for room {room.room_id}.")
+
     async def _fetch_rooms(self, session: aiohttp.ClientSession, params: dict) -> dict:
         """
             Fetch a single page of rooms from the Roomspot API.
         """
-        payload = None
-        async with aiofiles.open('hidden_filters.json', 'r') as f:
-            content = await f.read()
-            payload = json.loads(content)
+        payload = await helpers.load_json_file('roomspot/data/hidden_filters.json')
 
         async with session.post(self.ROOMS_URL, params=params, json=payload) as response:
             response.raise_for_status()
@@ -130,6 +140,9 @@ class RoomspotApi:
 
                 seen_links.add(room.link)
                 rooms.append(room)
+
+        await self.reactor.add_room_reaction_data(session, rooms)
+
         return rooms
 
 
@@ -140,7 +153,7 @@ async def test_room_retrieval():
     async with aiohttp.ClientSession() as session:
         api = RoomspotApi()
 
-        user_data = login_data(WebSite.ROOMSPOT)
+        user_data = login_data(Website.ROOMSPOT)
         username = user_data.login
         password = user_data.password
         await api.authorize(session, username=username, password=password)
@@ -161,7 +174,7 @@ async def test_sign():
     async with aiohttp.ClientSession() as session:
         api = RoomspotApi()
 
-        user_data = login_data(WebSite.ROOMSPOT)
+        user_data = login_data(Website.ROOMSPOT)
         username = user_data.login
         password = user_data.password
         await api.authorize(session, username=username, password=password)

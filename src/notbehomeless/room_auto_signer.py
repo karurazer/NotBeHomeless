@@ -1,4 +1,4 @@
-from notbehomeless.models.Room import Room
+from notbehomeless.models.room import Room
 from notbehomeless.room_filter import RoomFilter
 
 

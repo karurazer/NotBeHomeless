@@ -1,0 +1,170 @@
+    {
+    "hidden-filters": {
+      "$and": [
+        {
+          "dwellingType.categorie": {
+            "$eq": "woning"
+          }
+        },
+        {
+          "rentBuy": {
+            "$eq": "Huur"
+          }
+        },
+        {
+          "isExtraAanbod": {
+            "$eq": ""
+          }
+        },
+        {
+          "isWoningruil": {
+            "$eq": ""
+          }
+        },
+        {
+          "$and": [
+            {
+              "$or": [
+                {
+                  "street": {
+                    "$like": ""
+                  }
+                },
+                {
+                  "houseNumber": {
+                    "$like": ""
+                  }
+                },
+                {
+                  "houseNumberAddition": {
+                    "$like": ""
+                  }
+                }
+              ]
+            },
+            {
+              "$or": [
+                {
+                  "street": {
+                    "$like": ""
+                  }
+                },
+                {
+                  "houseNumber": {
+                    "$like": ""
+                  }
+                },
+                {
+                  "houseNumberAddition": {
+                    "$like": ""
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "reactionData.isPassend": {
+                "$eq": "1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "woningzoekende": {
+      "heeftToegangTotExtraAanbod": false,
+      "neemtDeelAanHaastrij": false,
+      "huurperiodeVanStartdatum": null,
+      "huurperiodeVanEinddatum": null,
+      "isRechtspersoon": false,
+      "isStudent": true,
+      "isAlleenAccomodate": false,
+      "heeftBlokkade": false,
+      "blokkadeVoorCorporatieIds": null,
+      "huishoudgrootte": 1,
+      "aantalMeeverhuizendeKinderen": 0,
+      "aantalMeeverhuizendeKinderenOnder18": 0,
+      "verzamelinkomen": 0,
+      "heeftEenTMin2Inkomen": true,
+      "heeftElkHuishoudLidOnderbouwdInkomen": false,
+      "leeftijdA1": 18,
+      "heeftA2": false,
+      "leeftijdA2": null,
+      "aowLeeftijdBereiktA1": false,
+      "aowLeeftijdBereiktA2": null,
+      "genderIdA1": "1",
+      "genderIdA2": null,
+      "startDatumStudieLigtInVoorrangsPeriode": false,
+      "studeertBijOnderwijsinstellingInRegioHaaglanden": false,
+      "woontVerderVanStudieVoorRegioHaaglanden": false,
+      "woontInNederland": true,
+      "studeertBijOnderwijsinstellingVU": false,
+      "studeertBijOnderwijsinstellingACTA": false,
+      "studeertBijOnderwijsinstellingRocAirport": false,
+      "studeertBijOnderwijsinstellingHaagseHogeschool": false,
+      "studeertBijOnderwijsinstellingUniversiteitLeiden": false,
+      "onderwijsinstellingBrincode": null,
+      "studieRegioId": 0,
+      "stageRegioId": 0,
+      "startdatumStudie": null,
+      "startdatumStage": null,
+      "inschrijvingTypes": [
+        {
+          "inCode": "student",
+          "id": "2"
+        }
+      ],
+      "subtypeInschrijvingId": null,
+      "opleidingstypeId": null,
+      "woontVerderVanOnderwijsinstelling": false,
+      "gemeenteGeoLocatieNaamA1": null,
+      "gemeenteIdA1": null,
+      "soortWoningzoekendeStarterDoorstromer": null,
+      "regioIdA1": null,
+      "regioIdA2": null,
+      "huisnummerA1": "",
+      "huisnummertoevoegingA1": null,
+      "postcodeA1": "",
+      "huisnummerA2": null,
+      "huisnummertoevoegingA2": null,
+      "postcodeA2": null,
+      "latitudeA1": null,
+      "latitudeA2": null,
+      "longitudeA1": null,
+      "longitudeA2": null,
+      "landIdA1": null,
+      "landIdA2": null,
+      "voorrangen": [],
+      "heeftVermogen": false,
+      "huidigeWoonsituatieId": 6,
+      "heeftUitstaandeBetaling": false,
+      "achterlatendeWoningen": [],
+      "vestigingsDatum": null,
+      "eigenaarId": null,
+      "maximaleInschrijftijdEinddatum": null,
+      "minimaleHuurprijs": null,
+      "maximaleHuurprijs": null,
+      "isScheefhuurder": false,
+      "bijzondereDoelgroepId": 0,
+      "extraInschrijfduurCorporatieId": null,
+      "extraInschrijfduurGemeente": null,
+      "actieveExtraInschrijfduur": false,
+      "meetDatum":null,
+      "wachttijdRegulierDatum": null,
+      "eigenWoningId": null,
+      "projecten": null
+    },
+    "zoekprofiel": {
+      "locatie": {
+        "regio": [],
+        "municipality": [],
+        "city": [],
+        "neighborhood": [
+          1
+        ]
+      }
+    }
+  }

@@ -1,4 +1,7 @@
+import json
 import time
+
+import aiofiles
 import jwt
 from pathlib import Path
 import pickle
@@ -31,3 +34,12 @@ def load_cookies(session, name: str):
 def is_token_expired(token):
     payload = jwt.decode(token, options={"verify_signature": False})
     return time.time() > payload["exp"] - 300  # Consider token expired if it's within 5 minutes of expiring
+
+async def load_json_file(project_file_path: str) -> dict:
+    """
+        Load a JSON file and return its content as a dictionary.
+    """
+    file_path = Path(__file__).resolve().parent.parent / project_file_path
+    async with aiofiles.open(file_path, 'r') as f:
+        content = await f.read()
+        return json.loads(content)

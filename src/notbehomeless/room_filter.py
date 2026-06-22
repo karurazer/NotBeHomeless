@@ -1,4 +1,4 @@
-from notbehomeless.models.Room import Room
+from notbehomeless.models.room import Room
 
 
 class RoomFilter:
@@ -21,10 +21,10 @@ class RoomFilter:
         self.shared = shared
 
     def matches(self, room: Room) -> bool:
-        if -1 <= self.max_price <= room.price:
+        if self.max_price != -1 and room.price > self.max_price:
             return False
 
-        if -1 <= self.min_size >= room.size:
+        if self.min_size != -1 and room.size < self.min_size:
             return False
 
         if self.kitchen and not room.private_kitchen:

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from notbehomeless.models.Room import Room
+from notbehomeless.models.room import Room
 
 
 def is_active_room(room: Room) -> bool:

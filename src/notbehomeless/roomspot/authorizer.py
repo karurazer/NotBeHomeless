@@ -1,8 +1,8 @@
 import aiohttp
 from yarl import URL
 
-from notbehomeless.Utils.Utils import save_cookies, is_token_expired, load_cookies
-from notbehomeless.models.WebSite import WebSite
+from notbehomeless.utils.helpers import save_cookies, is_token_expired, load_cookies
+from notbehomeless.models.website import Website
 
 
 class Authorizer:
@@ -21,7 +21,7 @@ class Authorizer:
         """
             Authorize the user and store Roomspot session cookies.
         """
-        load_cookies(session, WebSite.ROOMSPOT.name)
+        load_cookies(session, Website.ROOMSPOT.name)
         if await self.is_valid_session(session):
             print("Already logged in to Roomspot")
             return
@@ -38,7 +38,7 @@ class Authorizer:
                 raise ValueError(f"Failed to login to Roomspot: {response.status}")
 
             cookies = session.cookie_jar.filter_cookies(self.MAIN_URL)
-            save_cookies(cookies, WebSite.ROOMSPOT.name)
+            save_cookies(cookies, Website.ROOMSPOT.name)
             print("Successfully updated Roomspot cookies")
 
     async def is_valid_session(self, session: aiohttp.ClientSession) -> bool:

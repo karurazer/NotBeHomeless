@@ -1,5 +1,5 @@
 from enum import Enum
 
 
-class WebSite(Enum):
+class Website(Enum):
     ROOMSPOT = "Roomspot"

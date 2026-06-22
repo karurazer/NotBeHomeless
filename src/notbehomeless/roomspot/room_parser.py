@@ -1,5 +1,5 @@
-from notbehomeless.models.Room import Room
-from notbehomeless.models.WebSite import WebSite
+from notbehomeless.models.room import Room
+from notbehomeless.models.website import Website
 from datetime import datetime, timezone
 
 class RoomspotRoomParser:
@@ -36,7 +36,7 @@ class RoomspotRoomParser:
         }
 
         return Room(
-            WebSite.ROOMSPOT,
+            Website.ROOMSPOT,
             room_id,
             title,
             link,
