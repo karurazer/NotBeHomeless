@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+
+from notbehomeless.models.allocation_type import AllocationType
 from notbehomeless.models.website import Website
-from notbehomeless.roomspot.allocation_type import AllocationType
 from datetime import datetime
 
 @dataclass(slots=True)
@@ -24,7 +25,6 @@ class Room:
     private_kitchen: bool = False
     private_bathroom: bool = False
     furnished: bool = False
-    shared: bool = False
     wifi: bool = False
 
     action: str = ""
@@ -36,7 +36,6 @@ class Room:
                     "🍳 Kitchen" if self.private_kitchen else "❌ No kitchen",
                     "🛁 Private bathroom" if self.private_bathroom else "🚿 Shared bathroom",
                     "🪑 Furnished" if self.furnished else "📦 Unfurnished",
-                    "👥 Shared housing" if self.shared else "🏡 Private housing",
                     "📶 Wi-Fi" if self.wifi else "📵 No Wi-Fi"
         ]
 
@@ -52,6 +51,7 @@ class Room:
             f"📍 City: {self.city}\n"
             f"💰 Price: €{self.price}\n"
             f"📏 Size: {self.size} m²\n"
+            f"📌 Allocation Type: {self.allocation_type.value if self.allocation_type else 'N/A'}\n"
             f"📅 Publication Date: {self.publication_date.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"📅 Closing Date: {self.closing_date.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"🔗 Link: {self.link}\n"

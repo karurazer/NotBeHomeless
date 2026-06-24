@@ -686,17 +686,6 @@ files = [
 colors = ["colorama"]
 
 [[package]]
-name = "logging"
-version = "0.4.9.6"
-description = "A logging module for Python"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417"},
-]
-
-[[package]]
 name = "mccabe"
 version = "0.7.0"
 description = "McCabe checker, plugin for flake8"
@@ -1397,4 +1386,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "5bb3980721e79e4c7af0ddbb9d9caf5e8af7417194749803d6ee739f64963141"
+content-hash = "1234daa129c5e11d4e3fffee79580f48a36c366ca3ae21c1b49a89f514b470ac"

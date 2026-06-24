@@ -1,6 +1,9 @@
 from notbehomeless.models.room import Room
 from notbehomeless.models.website import Website
-from datetime import datetime, timezone
+from datetime import datetime
+
+from notbehomeless.models.allocation_type import AllocationType
+
 
 class RoomspotRoomParser:
     @staticmethod
@@ -17,6 +20,9 @@ class RoomspotRoomParser:
         title = f"{street} {house} {addition}".strip()
         publication_date_raw = item.get("publicationDate", "")
         closing_date_raw = item.get("closingDate", "")
+
+        model_category = item.get("toewijzingModelCategorie", {}).get("code", "")
+        allocation = AllocationType.from_code(model_category)
 
         if not publication_date_raw or not closing_date_raw:
             return None
@@ -45,6 +51,7 @@ class RoomspotRoomParser:
             size,
             publication_date,
             closing_date,
+            allocation_type=allocation,
             private_kitchen="Eigen keuken" in features,
             private_bathroom="Eigen badkamer" in features,
             furnished="Gemeubileerd" in features,

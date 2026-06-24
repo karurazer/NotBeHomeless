@@ -8,7 +8,6 @@ import aiofiles
 import aiohttp
 from yarl import URL
 
-from notbehomeless.utils import helpers
 from notbehomeless.models.website import Website
 from notbehomeless.models.room import Room
 from notbehomeless.utils.config import login_data
@@ -16,6 +15,7 @@ from notbehomeless.roomspot.authorizer import Authorizer
 from notbehomeless.roomspot.room_parser import RoomspotRoomParser
 from notbehomeless.roomspot.room_reactor import RoomReactor
 from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+from notbehomeless.utils.files import load_json_file
 
 
 class RoomspotApi:
@@ -36,7 +36,6 @@ class RoomspotApi:
     def __init__(self):
         self.reactor = RoomReactor()
         self.authorizer = Authorizer()
-        self.parser = RoomspotRoomParser()
 
     async def authorize(self, session: aiohttp.ClientSession, username: str, password: str):
         """
@@ -87,7 +86,7 @@ class RoomspotApi:
         """
             Fetch a single page of rooms from the Roomspot API.
         """
-        payload = await helpers.load_json_file('roomspot/data/hidden_filters.json')
+        payload = await load_json_file('roomspot/data/hidden_filters.json')
 
         async with session.post(self.ROOMS_URL, params=params, json=payload) as response:
             response.raise_for_status()
@@ -131,7 +130,7 @@ class RoomspotApi:
 
             for item in data.get("data", []):
 
-                room = self.parser.parse(item)
+                room = RoomspotRoomParser.parse(item)
                 if room is None:
                     continue
 

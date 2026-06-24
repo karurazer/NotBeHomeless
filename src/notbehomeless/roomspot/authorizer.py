@@ -1,7 +1,8 @@
 import aiohttp
 from yarl import URL
 
-from notbehomeless.utils.helpers import save_cookies, is_token_expired, load_cookies
+from notbehomeless.utils.cookies import save_cookies, load_cookies
+from notbehomeless.utils.token import is_token_expired
 from notbehomeless.models.website import Website
 
 
@@ -57,5 +58,5 @@ class Authorizer:
         if is_token_expired(token.value):
             return False
 
-        async with session.post(self.REFRESH_TOKEN_URL) as r:
-            return r.status == 200
+        async with session.post(self.REFRESH_TOKEN_URL) as response:
+            return response.status == 200

@@ -1,5 +1,5 @@
 from notbehomeless.models.room import Room
-from notbehomeless.room_filter import RoomFilter
+from notbehomeless.service.room_filter import RoomFilter
 
 
 class RoomAutoSigner:

@@ -50,11 +50,11 @@ class RoomReactor:
 
         form_submit_only = await self.get_form_submit_only_config(session)
         form = form_submit_only.get("form", {})
-        hash__ = form.get("elements", {}).get("__hash__", {}).get("initialData", "")
-        id__ = form.get("id", "")
+        hash_value = form.get("elements", {}).get("__hash__", {}).get("initialData", "")
+        form_id = form.get("id", "")
 
-        payload["__hash__"] = str(hash__)
-        payload["__id__"] = str(id__)
+        payload["__hash__"] = str(hash_value)
+        payload["__id__"] = str(form_id)
 
         async with session.post(self.REACT_ROOM_URL, data=payload) as response:
             response.raise_for_status()
@@ -85,5 +85,6 @@ class RoomReactor:
             room.action = room_reaction_data.get("action", "")
 
             url = room_reaction_data.get("url", "")
-            params = parse_qs(url.lstrip("?"))
-            room.action_value = str(params.get(room.action, [""])[0])
+
+            query = parse_qs(url.lstrip("?"))
+            room.action_value = str(query.get(room.action, [""])[0])
