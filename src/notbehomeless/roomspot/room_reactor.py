@@ -1,11 +1,14 @@
 """
 Room reaction handling for Roomspot.
 """
+import logging
 from urllib.parse import parse_qs
 import aiohttp
 from yarl import URL
 from notbehomeless.models.room import Room
 from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+
+logger = logging.getLogger(__name__)
 
 
 class RoomReactor:
@@ -59,8 +62,7 @@ class RoomReactor:
         async with session.post(self.REACT_ROOM_URL, data=payload) as response:
             response.raise_for_status()
             if response.status == 200:
-                print(f"|Successfully react -|{action_to_do.name}|- for room:"
-                      f"\n {room}\n===================")
+                logger.info("Reaction %s succeeded for room %s", action_to_do.name, room.room_id)
             await self.add_room_reaction_data(session, [room])
             return await response.json()
 
@@ -75,7 +77,7 @@ class RoomReactor:
         async with session.get(self.ROOMS_GET_REACTION_DATA_URL, params=params) as response:
             response.raise_for_status()
             if response.status != 200:
-                print(f"Failed to get room reaction data: {response.status}")
+                logger.warning("Failed to get room reaction data: %s", response.status)
             data = await response.json()
 
         reaction_data = data.get("reagerenData", {})

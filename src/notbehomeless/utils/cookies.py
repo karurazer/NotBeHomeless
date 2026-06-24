@@ -1,7 +1,10 @@
+import logging
 import pickle
 from pathlib import Path
 
 from yarl import URL
+
+logger = logging.getLogger(__name__)
 
 
 def save_cookies(cookies, name: str):
@@ -25,4 +28,4 @@ def load_cookies(session, name: str):
             cookies = pickle.load(f)
         session.cookie_jar.update_cookies(cookies, response_url=URL("https://www.roomspot.nl"))
     except Exception as e:
-        print(f"Failed to load cookies for {name}: {e}")
+        logger.exception("Failed to load cookies for %s: %s", name, e)

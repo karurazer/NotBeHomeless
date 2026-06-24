@@ -2,9 +2,8 @@
 Roomspot API client for authorization, room retrieval,
 and room reaction management.
 """
-import json
+import logging
 
-import aiofiles
 import aiohttp
 from yarl import URL
 
@@ -16,6 +15,8 @@ from notbehomeless.roomspot.room_parser import RoomspotRoomParser
 from notbehomeless.roomspot.room_reactor import RoomReactor
 from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
 from notbehomeless.utils.files import load_json_file
+
+logger = logging.getLogger(__name__)
 
 
 class RoomspotApi:
@@ -54,7 +55,7 @@ class RoomspotApi:
                 action
             )
         except ValueError as e:
-            print(f"Failed to perform room action for room {room.room_id}: {e}")
+            logger.error("Failed to perform room action for room %s: %s", room.room_id, e)
 
     async def sign_room(self, session: aiohttp.ClientSession, room: Room):
         """
@@ -78,9 +79,9 @@ class RoomspotApi:
             elif room.action == RoomReactionAction.REMOVE.value:
                 await self.unsign_room(session, room)
             else:
-                print(f"Unknown action '{room.action}' for room {room.room_id}.")
+                logger.warning("Unknown action '%s' for room %s", room.action, room.room_id)
         else:
-            print(f"No available action for room {room.room_id}.")
+            logger.debug("No available action for room %s", room.room_id)
 
     async def _fetch_rooms(self, session: aiohttp.ClientSession, params: dict) -> dict:
         """
@@ -101,7 +102,7 @@ class RoomspotApi:
         async with session.get(self.ROOM_INFO_URL, params=params) as response:
             response.raise_for_status()
             if response.status != 200:
-                print(f"Failed to get room info for room id {room_id}: {response.status}")
+                logger.warning("Failed to get room info for room id %s: %s", room_id, response.status)
             return await response.json()
 
     async def get_all_rooms(self, session: aiohttp.ClientSession) -> list[Room]:
@@ -141,7 +142,7 @@ class RoomspotApi:
                 rooms.append(room)
 
         await self.reactor.add_room_reaction_data(session, rooms)
-
+        logger.info("Fetched %s rooms from Roomspot", len(rooms))
         return rooms
 
 
@@ -158,10 +159,10 @@ async def test_room_retrieval():
         await api.authorize(session, username=username, password=password)
 
         rooms = await api.get_all_rooms(session)
-        for room in rooms:
-            print(room)
 
-        print("Total find rooms: ", len(rooms))
+        rooms_text = "\n".join(str(room) for room in rooms)
+        rooms_text += "\n\n" + f"Total rooms: {len(rooms)}"
+        logger.debug(rooms_text)
 
 
 async def test_sign():
@@ -179,10 +180,9 @@ async def test_sign():
         await api.authorize(session, username=username, password=password)
 
         rooms = await api.get_all_rooms(session)
-        print(rooms)
         if rooms:
             await api.sign_room(session, rooms[0])
-            print("Waiting for 5 seconds before removing reaction...")
+            logger.info("Waiting for 5 seconds before removing reaction...")
 
             await asyncio.sleep(5)
             await api.unsign_room(session, rooms[0])
@@ -191,4 +191,7 @@ async def test_sign():
 if __name__ == "__main__":
     import asyncio
 
-    asyncio.run(test_sign())
+    from notbehomeless.utils.logging_config import setup_logging
+
+    setup_logging()
+    asyncio.run(test_room_retrieval())
