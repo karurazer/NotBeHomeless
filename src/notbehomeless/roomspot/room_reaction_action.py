@@ -1,10 +1,10 @@
 """
 Roomspot room reaction handling.
 """
-from enum import Enum
+from enum import StrEnum
 
 
-class RoomReactionAction(Enum):
+class RoomReactionAction(StrEnum):
     """
        Available reaction actions for a Roomspot room.
        """

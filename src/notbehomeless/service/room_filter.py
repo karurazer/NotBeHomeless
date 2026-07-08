@@ -8,8 +8,7 @@ class RoomFilter:
             min_size: float = -1,
             kitchen: bool = False,
             bathroom: bool = False,
-            furnished: bool = False,
-            shared: bool = False
+            furnished: bool = False
 
     ):
         self.max_price = max_price
@@ -18,7 +17,6 @@ class RoomFilter:
         self.kitchen = kitchen
         self.bathroom = bathroom
         self.furnished = furnished
-        self.shared = shared
 
     def matches(self, room: Room) -> bool:
         if self.max_price != -1 and room.price > self.max_price:
@@ -34,9 +32,6 @@ class RoomFilter:
             return False
 
         if self.furnished and not room.furnished:
-            return False
-
-        if self.shared and not room.shared:
             return False
 
         return True

@@ -84,7 +84,8 @@ import aiohttp
 from notbehomeless.roomspot.api import RoomspotApi
 from notbehomeless.models.website import Website
 from notbehomeless.utils.config import login_data
-from notbehomeless.utils.logging_config import setup_logging
+from notbehomeless.config.logging_config import setup_logging
+
 
 async def main():
     setup_logging()
@@ -112,7 +113,7 @@ matching = [r for r in rooms if room_filter.matches(r)]
 ## Logging
 
 Logging is configured centrally in
-[`utils/logging_config.py`](src/notbehomeless/utils/logging_config.py). Call
+[`utils/logging_config.py`](src/notbehomeless/config/logging_config.py). Call
 `setup_logging()` once at startup; raise verbosity with `setup_logging(logging.DEBUG)`.
 Library modules only obtain a logger via `logging.getLogger(__name__)`.
 

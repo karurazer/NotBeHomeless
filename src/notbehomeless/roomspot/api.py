@@ -14,6 +14,7 @@ from notbehomeless.roomspot.authorizer import Authorizer
 from notbehomeless.roomspot.room_parser import RoomspotRoomParser
 from notbehomeless.roomspot.room_reactor import RoomReactor
 from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+from notbehomeless.roomspot.exception import ReactionFailedError
 from notbehomeless.utils.files import load_json_file
 
 logger = logging.getLogger(__name__)
@@ -54,8 +55,9 @@ class RoomspotApi:
                 room,
                 action
             )
-        except ValueError as e:
+        except (ValueError, aiohttp.ClientError) as e:
             logger.error("Failed to perform room action for room %s: %s", room.room_id, e)
+            raise ReactionFailedError(room.room_id) from e
 
     async def sign_room(self, session: aiohttp.ClientSession, room: Room):
         """
@@ -191,7 +193,7 @@ async def test_sign():
 if __name__ == "__main__":
     import asyncio
 
-    from notbehomeless.utils.logging_config import setup_logging
+    from notbehomeless.config.logging_config import setup_logging
 
     setup_logging()
     asyncio.run(test_room_retrieval())
