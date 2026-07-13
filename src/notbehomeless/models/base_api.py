@@ -12,7 +12,7 @@ class BaseApi(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    async def sign_room(self, session: aiohttp.ClientSession, room: Room):
+    async def _sign_room(self, session: aiohttp.ClientSession, room: Room):
         """
         Sign a room.
         :param session: The aiohttp session to use for the request.
@@ -20,14 +20,37 @@ class BaseApi(ABC):
         """
         pass
 
+    async def sign_room(self, session: aiohttp.ClientSession, room: Room):
+        self.logger.info("Signing room %s...", room.room_id)
+        result = await self._sign_room(session, room)
+        self.logger.info("Sign action is finished for room %s", room.room_id)
+        return result
+
+
     @abstractmethod
-    async def unsign_room(self, session: aiohttp.ClientSession, room: Room):
+    async def _unsign_room(self, session: aiohttp.ClientSession, room: Room):
         """
-        Unsign a room.
-        :param session: The aiohttp session to use for the request.
-        :param room: The room to unsign.
-        """
+                Unsign a room.
+                :param session: The aiohttp session to use for the request.
+                :param room: The room to unsign.
+                """
         pass
+
+    async def unsign_room(self, session: aiohttp.ClientSession, room: Room):
+        self.logger.info("Unsigning room %s...", room.room_id)
+        result = await self._unsign_room(session, room)
+        self.logger.info("Unsign action is finished for room %s", room.room_id)
+        return result
+
+
+    @abstractmethod
+    async def _authorize(self, session, username, password):
+        """
+        Authorize the user with the given username and password.
+        :param session: The aiohttp session to use for the request.
+        :param username: The username to authorize with.
+        :param password: The password to authorize with.
+        """
 
     async def authorize(self, session, username, password):
         self.logger.info("Authorizing...")
@@ -35,12 +58,18 @@ class BaseApi(ABC):
         self.logger.info("Authorization finished")
         return result
 
+
     @abstractmethod
-    async def _authorize(self, session, username, password):
+    async def _get_rooms(self, session: aiohttp.ClientSession) -> list[Room]:
         """
-                Authorize the user with the given username and password.
-                :param session: The aiohttp session to use for the request.
-                :param username: The username to authorize with.
-                :param password: The password to authorize with.
-                """
+        Get a list of rooms.
+        :param session: The aiohttp session to use for the request.
+        :return: A list of Room objects.
+        """
+
+    async def get_rooms(self, session: aiohttp.ClientSession) -> list[Room]:
+        self.logger.info("Fetching rooms...")
+        rooms: list[Room] = await self._get_rooms(session)
+        self.logger.info("Fetched %d rooms", len(rooms))
+        return rooms
 

@@ -19,7 +19,7 @@ async def test_room_retrieval():
         password = user_data.password
         await api.authorize(session, username=username, password=password)
 
-        rooms = await api.get_all_rooms(session)
+        rooms = await api.get_rooms(session)
 
         rooms_text = "\n".join(str(room) for room in rooms)
         rooms_text += "\n\n" + f"Total rooms: {len(rooms)}"
@@ -40,7 +40,7 @@ async def test_sign():
         password = user_data.password
         await api.authorize(session, username=username, password=password)
 
-        rooms = await api.get_all_rooms(session)
+        rooms = await api.get_rooms(session)
         if rooms:
             await api.sign_room(session, rooms[0])
             logger.info("Waiting for 5 seconds before removing reaction...")

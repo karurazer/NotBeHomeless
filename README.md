@@ -94,7 +94,7 @@ async def main():
         creds = login_data(Website.ROOMSPOT)
         await api.authorize(session, creds.login, creds.password)
 
-        rooms = await api.get_all_rooms(session)
+        rooms = await api.get_rooms(session)
         for room in rooms:
             await api.perform_available_room_action(session, room)
 ```

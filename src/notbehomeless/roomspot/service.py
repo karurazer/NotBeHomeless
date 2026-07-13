@@ -29,7 +29,7 @@ class RoomspotService:
             Raises RoomNotFoundError / RoomNotReactableError / ActionUnavailableError
             for client-side rejections, and ReactionFailedError on upstream failure.
         """
-        rooms = await self.api.get_all_rooms(session)
+        rooms = await self.api.get_rooms(session)
         room = next((r for r in rooms if r.room_id == room_id), None)
         if room is None:
             raise RoomNotFoundError(room_id)

@@ -20,7 +20,7 @@ async def list_rooms(
     room_filter: RoomFilterDep,
 ) -> list[RoomOut]:
     """List current rooms, optionally filtered via query parameters."""
-    rooms = await api.get_all_rooms(session)
+    rooms = await api.get_rooms(session)
     return [RoomOut.from_room(r) for r in rooms if room_filter.matches(r)]
 
 

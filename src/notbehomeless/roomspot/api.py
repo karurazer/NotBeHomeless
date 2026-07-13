@@ -57,13 +57,13 @@ class RoomspotApi(BaseApi):
             self.logger.error("Failed to perform room action for room %s: %s", room.room_id, e)
             raise ReactionFailedError(room.room_id) from e
 
-    async def sign_room(self, session: aiohttp.ClientSession, room: Room):
+    async def _sign_room(self, session: aiohttp.ClientSession, room: Room):
         """
             Add a reaction to the specified room.
         """
         await self._room_action(session, room, RoomReactionAction.ADD)
 
-    async def unsign_room(self, session: aiohttp.ClientSession, room: Room):
+    async def _unsign_room(self, session: aiohttp.ClientSession, room: Room):
         """
             Remove an existing reaction from the specified room.
         """
@@ -93,7 +93,7 @@ class RoomspotApi(BaseApi):
             response.raise_for_status()
             return await response.json()
 
-    async def get_room_info(self, session: aiohttp.ClientSession, room_id: int) -> dict:
+    async def _get_room_info(self, session: aiohttp.ClientSession, room_id: int) -> dict:
         """
             Fetch detailed information for a specific Roomspot room.
         """
@@ -105,7 +105,7 @@ class RoomspotApi(BaseApi):
                 self.logger.warning("Failed to get room info for room id %s: %s", room_id, response.status)
             return await response.json()
 
-    async def get_all_rooms(self, session: aiohttp.ClientSession) -> list[Room]:
+    async def _get_rooms(self, session: aiohttp.ClientSession) -> list[Room]:
         """
             Fetch and parse all available rooms from Roomspot.
         """
@@ -142,6 +142,5 @@ class RoomspotApi(BaseApi):
                 rooms.append(room)
 
         await self.reactor.add_room_reaction_data(session, rooms)
-        self.logger.info("Fetched %s rooms from Roomspot", len(rooms))
         return rooms
 
