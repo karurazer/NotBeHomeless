@@ -30,7 +30,7 @@ class RoomAutoSigner:
             logger.info("No rooms found to auto sign.")
             return
 
-        filtered_rooms = [r for r in rooms if self.room_filter.matches(r)]
+        filtered_rooms = [r for r in rooms if self.room_filter.matches(r) and r.action != "remove"]
         if not filtered_rooms:
             logger.info("No rooms found to auto sign after filtering.")
             return
@@ -39,16 +39,11 @@ class RoomAutoSigner:
 
         for room in filtered_rooms:
             try:
-                if room.action != "add":
-                    logger.info("Skipping room %s as it cannot be signed (action: %s)", room.room_id, room.action)
-                    continue
-
                 await self.api.sign_room(self.session, room)
-                logger.info("Successfully signed room %s", room.room_id)
                 logger.debug("Room details: %s", room)
 
             except Exception as e:
-                logger.error("Failed to sign room %s: %s", room.room_id, str(e))
+                logger.exception("Failed to sign room %s: %s", room.room_id, str(e))
 
         logger.info("Finished signing rooms.")
 
