@@ -2,14 +2,12 @@
 Roomspot API client for authorization, room retrieval,
 and room reaction management.
 """
-import logging
 
 import aiohttp
 from yarl import URL
 
-from notbehomeless.models.website import Website
+from notbehomeless.models.base_api import BaseApi
 from notbehomeless.models.room import Room
-from notbehomeless.utils.config import login_data
 from notbehomeless.roomspot.authorizer import Authorizer
 from notbehomeless.roomspot.room_parser import RoomspotRoomParser
 from notbehomeless.roomspot.room_reactor import RoomReactor
@@ -17,10 +15,9 @@ from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
 from notbehomeless.roomspot.exception import ReactionFailedError
 from notbehomeless.utils.files import load_json_file
 
-logger = logging.getLogger(__name__)
 
 
-class RoomspotApi:
+class RoomspotApi(BaseApi):
     """
         Provides interaction with the Roomspot API.
 
@@ -36,10 +33,11 @@ class RoomspotApi:
     ROOM_INFO_URL = URL("https://www.roomspot.nl/portal/object/frontend/getobject/format/json")
 
     def __init__(self):
+        super().__init__()
         self.reactor = RoomReactor()
         self.authorizer = Authorizer()
 
-    async def authorize(self, session: aiohttp.ClientSession, username: str, password: str):
+    async def _authorize(self, session: aiohttp.ClientSession, username: str, password: str):
         """
             Authorize the user.
         """
@@ -56,7 +54,7 @@ class RoomspotApi:
                 action
             )
         except (ValueError, aiohttp.ClientError) as e:
-            logger.error("Failed to perform room action for room %s: %s", room.room_id, e)
+            self.logger.error("Failed to perform room action for room %s: %s", room.room_id, e)
             raise ReactionFailedError(room.room_id) from e
 
     async def sign_room(self, session: aiohttp.ClientSession, room: Room):
@@ -81,9 +79,9 @@ class RoomspotApi:
             elif room.action == RoomReactionAction.REMOVE.value:
                 await self.unsign_room(session, room)
             else:
-                logger.warning("Unknown action '%s' for room %s", room.action, room.room_id)
+                self.logger.warning("Unknown action '%s' for room %s", room.action, room.room_id)
         else:
-            logger.debug("No available action for room %s", room.room_id)
+            self.logger.debug("No available action for room %s", room.room_id)
 
     async def _fetch_rooms(self, session: aiohttp.ClientSession, params: dict) -> dict:
         """
@@ -104,7 +102,7 @@ class RoomspotApi:
         async with session.get(self.ROOM_INFO_URL, params=params) as response:
             response.raise_for_status()
             if response.status != 200:
-                logger.warning("Failed to get room info for room id %s: %s", room_id, response.status)
+                self.logger.warning("Failed to get room info for room id %s: %s", room_id, response.status)
             return await response.json()
 
     async def get_all_rooms(self, session: aiohttp.ClientSession) -> list[Room]:
@@ -144,56 +142,6 @@ class RoomspotApi:
                 rooms.append(room)
 
         await self.reactor.add_room_reaction_data(session, rooms)
-        logger.info("Fetched %s rooms from Roomspot", len(rooms))
+        self.logger.info("Fetched %s rooms from Roomspot", len(rooms))
         return rooms
 
-
-async def test_room_retrieval():
-    """
-       Test room retrieval from Roomspot.
-    """
-    async with aiohttp.ClientSession() as session:
-        api = RoomspotApi()
-
-        user_data = login_data(Website.ROOMSPOT)
-        username = user_data.login
-        password = user_data.password
-        await api.authorize(session, username=username, password=password)
-
-        rooms = await api.get_all_rooms(session)
-
-        rooms_text = "\n".join(str(room) for room in rooms)
-        rooms_text += "\n\n" + f"Total rooms: {len(rooms)}"
-        logger.debug(rooms_text)
-
-
-async def test_sign():
-    """
-        Test authorization and room reaction submission.
-    """
-    import asyncio
-
-    async with aiohttp.ClientSession() as session:
-        api = RoomspotApi()
-
-        user_data = login_data(Website.ROOMSPOT)
-        username = user_data.login
-        password = user_data.password
-        await api.authorize(session, username=username, password=password)
-
-        rooms = await api.get_all_rooms(session)
-        if rooms:
-            await api.sign_room(session, rooms[0])
-            logger.info("Waiting for 5 seconds before removing reaction...")
-
-            await asyncio.sleep(5)
-            await api.unsign_room(session, rooms[0])
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    from notbehomeless.config.logging_config import setup_logging
-
-    setup_logging()
-    asyncio.run(test_room_retrieval())
