@@ -9,6 +9,7 @@ class RoomOut(BaseModel):
     """Room as returned by the API."""
 
     room_id: int
+    status: str
     title: str
     link: str
     price: float
@@ -28,6 +29,7 @@ class RoomOut(BaseModel):
         """Map an internal ``Room`` domain object to the API DTO."""
         return cls(
             room_id=room.room_id,
+            status= "reacted" if room.action == "remove" else "not_reacted",
             title=room.title,
             link=room.link,
             price=room.price,

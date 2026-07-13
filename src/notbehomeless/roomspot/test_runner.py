@@ -48,6 +48,25 @@ async def test_sign():
             await asyncio.sleep(5)
             await api.unsign_room(session, rooms[0])
 
+async def test_auto_signer():
+    """
+        Test the RoomAutoSigner functionality.
+    """
+    from notbehomeless.service.room_auto_signer import RoomAutoSigner
+    from notbehomeless.service.room_filter import RoomFilter
+
+    async with aiohttp.ClientSession() as session:
+        api = RoomspotApi()
+
+        user_data = login_data(Website.ROOMSPOT)
+        username = user_data.login
+        password = user_data.password
+        await api.authorize(session, username=username, password=password)
+
+        room_filter = RoomFilter(max_price=-1, min_size=20, kitchen=True, bathroom=True, furnished=True)
+        auto_signer = RoomAutoSigner(room_filter=room_filter, api=api, session=session, period=10_000)
+
+        await auto_signer.start()
 
 if __name__ == "__main__":
     import asyncio
@@ -55,4 +74,4 @@ if __name__ == "__main__":
     from notbehomeless.config.logging_config import setup_logging
 
     setup_logging(logging.DEBUG)
-    asyncio.run(test_room_retrieval())
+    asyncio.run(test_auto_signer())
