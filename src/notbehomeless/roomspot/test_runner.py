@@ -74,4 +74,7 @@ if __name__ == "__main__":
     from notbehomeless.config.logging_config import setup_logging
 
     setup_logging(logging.DEBUG)
-    asyncio.run(test_auto_signer())
+    try:
+        asyncio.run(test_auto_signer())
+    except KeyboardInterrupt:
+        logger.info("Test interrupted by user.")
