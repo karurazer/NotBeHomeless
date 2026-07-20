@@ -13,6 +13,7 @@ from fastapi import Depends, Query, Request
 from notbehomeless.roomspot.api import RoomspotApi
 from notbehomeless.roomspot.service import RoomspotService
 from notbehomeless.models.room_filter import RoomFilter
+from notbehomeless.service.auto_signer_manager import AutoSignerManager
 
 
 def get_session(request: Request) -> aiohttp.ClientSession:
@@ -28,6 +29,11 @@ def get_roomspot(request: Request) -> RoomspotApi:
 def get_roomspot_service(request: Request) -> RoomspotService:
     """Wrap the shared Roomspot client in a high-level service."""
     return RoomspotService(request.app.state.roomspot)
+
+
+def get_auto_signer_manager(request: Request) -> AutoSignerManager:
+    """Return the application-wide auto-signer registry."""
+    return request.app.state.auto_signer_manager
 
 
 def get_room_filter(
@@ -50,4 +56,5 @@ def get_room_filter(
 SessionDep = Annotated[aiohttp.ClientSession, Depends(get_session)]
 RoomspotDep = Annotated[RoomspotApi, Depends(get_roomspot)]
 RoomspotServiceDep = Annotated[RoomspotService, Depends(get_roomspot_service)]
+AutoSignerManagerDep = Annotated[AutoSignerManager, Depends(get_auto_signer_manager)]
 RoomFilterDep = Annotated[RoomFilter, Depends(get_room_filter)]

@@ -3,7 +3,6 @@ from fastapi import APIRouter
 
 from notbehomeless.api.dependencies import (
     RoomFilterDep,
-    RoomspotDep,
     RoomspotServiceDep,
     SessionDep,
 )

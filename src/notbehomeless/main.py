@@ -13,6 +13,7 @@ from fastapi import FastAPI
 
 from notbehomeless.models.website import Website
 from notbehomeless.roomspot.api import RoomspotApi
+from notbehomeless.service.auto_signer_manager import AutoSignerManager
 from notbehomeless.utils.config import login_data
 from notbehomeless.config.logging_config import setup_logging
 from notbehomeless.factory.exceptions_factory import init_exceptions_handler
@@ -35,9 +36,11 @@ async def lifespan(app: FastAPI):
 
     app.state.session = session
     app.state.roomspot = roomspot
+    app.state.auto_signer_manager = AutoSignerManager()
 
     yield
 
+    await app.state.auto_signer_manager.stop_all()
     await session.close()
 
 
@@ -46,10 +49,11 @@ def create_app() -> FastAPI:
     """Build and configure the FastAPI application."""
     fastapi = FastAPI(title="notBeHomeless", version="0.1.0", lifespan=lifespan)
 
-    from notbehomeless.api.routers import health, rooms
+    from notbehomeless.api.routers import health, rooms, signers
 
     fastapi.include_router(health.router)
     fastapi.include_router(rooms.router)
+    fastapi.include_router(signers.router)
 
     init_exceptions_handler(fastapi)
 
