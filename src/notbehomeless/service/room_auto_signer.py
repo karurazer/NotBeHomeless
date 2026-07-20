@@ -4,7 +4,7 @@ import logging
 import aiohttp
 from notbehomeless.models.base_api import BaseApi
 from notbehomeless.models.room import Room
-from notbehomeless.service.room_filter import RoomFilter
+from notbehomeless.models.room_filter import RoomFilter
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ class RoomAutoSigner:
 
     async def start(self):
         while True:
+            # noinspection PyBroadException
             try:
                 await self._sign_rooms()
             except asyncio.CancelledError:

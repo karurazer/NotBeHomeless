@@ -15,13 +15,13 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 
 @router.get("")
 async def list_rooms(
-    api: RoomspotDep,
+    service: RoomspotServiceDep,
     session: SessionDep,
     room_filter: RoomFilterDep,
 ) -> list[RoomOut]:
     """List current rooms, optionally filtered via query parameters."""
-    rooms = await api.get_rooms(session)
-    return [RoomOut.from_room(r) for r in rooms if room_filter.matches(r)]
+    rooms = await service.get_rooms(session, room_filter)
+    return [RoomOut.from_room(r) for r in rooms]
 
 
 @router.post(

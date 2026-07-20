@@ -9,6 +9,7 @@ from notbehomeless.roomspot.exception import (
     RoomNotReactableError,
 )
 from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+from notbehomeless.models.room_filter import RoomFilter
 
 
 class RoomspotService:
@@ -44,3 +45,15 @@ class RoomspotService:
             await self.api.unsign_room(session, room)
 
         return room
+
+    async def get_rooms(
+        self,
+        session: aiohttp.ClientSession,
+        room_filter: RoomFilter,
+    ) -> list[Room]:
+        """
+            Retrieve the current list of rooms, filtered by the given criteria.
+        """
+        rooms = await self.api.get_rooms(session)
+        return [r for r in rooms if room_filter.matches(r)]
+

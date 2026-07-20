@@ -12,7 +12,7 @@ from fastapi import Depends, Query, Request
 
 from notbehomeless.roomspot.api import RoomspotApi
 from notbehomeless.roomspot.service import RoomspotService
-from notbehomeless.service.room_filter import RoomFilter
+from notbehomeless.models.room_filter import RoomFilter
 
 
 def get_session(request: Request) -> aiohttp.ClientSession:

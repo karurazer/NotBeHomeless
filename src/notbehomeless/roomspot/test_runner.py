@@ -53,7 +53,7 @@ async def test_auto_signer():
         Test the RoomAutoSigner functionality.
     """
     from notbehomeless.service.room_auto_signer import RoomAutoSigner
-    from notbehomeless.service.room_filter import RoomFilter
+    from notbehomeless.models.room_filter import RoomFilter
 
     async with aiohttp.ClientSession() as session:
         api = RoomspotApi()
