@@ -1,7 +1,7 @@
 [project]
 name = "notbehomeless"
 version = "0.1.0"
-description = ""
+description = "Async FastAPI service that finds and auto-reacts to Dutch student housing offers (Roomspot)."
 authors = [
     {name = "karurazer",email = "karurazer@gmail.com"}
 ]
@@ -18,14 +18,22 @@ dependencies = [
     "yarl (>=1.23.0,<2.0.0)",
     "pylint (>=4.0.5,<5.0.0)",
     "aiofiles (>=25.1.0,<26.0.0)",
-    "fastapi[standart] (>=0.139.0,<0.140.0)",
-    "uvicorn (>=0.49.0,<0.50.0)",
+    "fastapi[standard] (>=0.139.0,<0.140.0)",
+    "uvicorn (>=0.51.0,<0.52.0)",
     "pydantic (>=2.13.4,<3.0.0)"
 ]
 
 [tool.poetry]
 packages = [{include = "notbehomeless", from = "src"}]
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.1.1"
+pytest-asyncio = "^1.4.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
