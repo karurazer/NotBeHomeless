@@ -4,7 +4,7 @@
 
 # User data & secrets
 src/notbehomeless/storage/
-src/notbehomeless/roomspot/data/hidden_filters.json
+src/notbehomeless/websites/roomspot/data/hidden_filters.json
 
 # User-specific stuff
 .idea/**/workspace.xml

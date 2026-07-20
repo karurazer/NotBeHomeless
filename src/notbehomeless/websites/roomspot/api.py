@@ -8,11 +8,11 @@ from yarl import URL
 
 from notbehomeless.models.base_api import BaseApi
 from notbehomeless.models.room import Room
-from notbehomeless.roomspot.authorizer import Authorizer
-from notbehomeless.roomspot.room_parser import RoomspotRoomParser
-from notbehomeless.roomspot.room_reactor import RoomReactor
-from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
-from notbehomeless.roomspot.exception import ReactionFailedError
+from notbehomeless.websites.roomspot.authorizer import Authorizer
+from notbehomeless.websites.roomspot.room_parser import RoomspotRoomParser
+from notbehomeless.websites.roomspot.room_reactor import RoomReactor
+from notbehomeless.websites.roomspot.room_reaction_action import RoomReactionAction
+from notbehomeless.websites.roomspot.exception import ReactionFailedError
 from notbehomeless.utils.files import load_json_file
 
 
@@ -87,7 +87,7 @@ class RoomspotApi(BaseApi):
         """
             Fetch a single page of rooms from the Roomspot API.
         """
-        payload = await load_json_file('roomspot/data/hidden_filters.json')
+        payload = await load_json_file('websites/roomspot/data/hidden_filters.json')
 
         async with session.post(self.ROOMS_URL, params=params, json=payload) as response:
             response.raise_for_status()

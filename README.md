@@ -1,13 +1,13 @@
 # notBeHomeless
 
-Async automation bot for student housing platforms in the Netherlands. It logs in,
-caches the session, fetches and parses the current housing offers, filters them by
-your criteria, and can automatically react to (sign up for) matching rooms.
+Async automation bot for student housing platforms in the Netherlands, exposed as a
+**FastAPI** service. It logs in, caches the session, fetches and parses the current
+housing offers, filters them by your criteria, lets you react to (sign up for) rooms
+via a REST API, and can auto-sign matching rooms in the background.
 
 The codebase is built to be **multi-platform**: generic domain models live in
-`models/`, site-specific clients plug in per platform, and each platform is identified
-by the `Website` enum.
-
+`models/`, site-specific clients plug in under `websites/<site>/`, and each platform
+is identified by the `Website` enum.
 
 ## Supported platforms
 
@@ -19,9 +19,14 @@ by the `Website` enum.
 
 ## Features
 
-- 🏠 Fetching and parsing of the current housing offers
-- 🎯 Filtering by price, size, private kitchen/bathroom, furnished, shared
-- ✅ Adding / removing reactions to rooms
+- 🌐 REST API (FastAPI) with interactive docs at `/docs`
+- 🔐 Authentication with session/cookie persistence (re-login only when the token expires)
+- 🏠 Fetching and parsing of the current housing offers (paginated)
+- 🎯 Filtering by price, size, private kitchen/bathroom, furnished
+- ✅ Adding / removing reactions to rooms, with truthful error reporting (404/409/502)
+- 🤖 Background **auto-signer**: periodically signs rooms matching your filter
+- 🧾 Structured `logging` (configurable level)
+- 🔒 Personal data and secrets kept out of git
 
 ## Requirements
 
@@ -61,50 +66,60 @@ address, etc. It contains **personal data**, so the real file is git-ignored and
 a template is committed.
 
 ```bash
-cp src/notbehomeless/roomspot/data/hidden_filters.example.json \
-   src/notbehomeless/roomspot/data/hidden_filters.json
+cp src/notbehomeless/websites/roomspot/data/hidden_filters.example.json \
+   src/notbehomeless/websites/roomspot/data/hidden_filters.json
 ```
 
 Then edit `hidden_filters.json` with your own profile values.
 
+> `.env`, `hidden_filters.json` and `storage/` (session cookies) are listed in
+> `.gitignore` — never commit them.
+
 ## Usage
 
-Run the sample retrieval flow (fetch and log all matching rooms):
+Start the API server:
 
 ```bash
-poetry run python -m notbehomeless.roomspot.api
+poetry run uvicorn notbehomeless.main:create_app --factory --reload
+# or: poetry run python -m notbehomeless.main
 ```
 
-The entry point in [`api.py`](src/notbehomeless/roomspot/api.py) calls `setup_logging()`
-and runs `test_room_retrieval()`. Use the `RoomspotApi` class directly to build your
-own flow:
+Then open **http://127.0.0.1:8000/docs** for interactive Swagger docs.
 
-```python
-import aiohttp
-from notbehomeless.roomspot.api import RoomspotApi
-from notbehomeless.models.website import Website
-from notbehomeless.utils.config import login_data
-from notbehomeless.config.logging_config import setup_logging
+On startup the app logs in to Roomspot (lifespan), keeps one shared aiohttp session,
+and shuts down any running auto-signers on exit.
 
+### Endpoints
 
-async def main():
-    setup_logging()
-    async with aiohttp.ClientSession() as session:
-        api = RoomspotApi()
-        creds = login_data(Website.ROOMSPOT)
-        await api.authorize(session, creds.login, creds.password)
+| Method | Path                    | Description                                                        |
+|--------|-------------------------|--------------------------------------------------------------------|
+| GET    | `/health`               | Liveness probe                                                     |
+| GET    | `/rooms`                | List rooms; filter via query (`max_price`, `min_size`, `kitchen`, `bathroom`, `furnished`) |
+| POST   | `/rooms/{id}/react`     | React to a room; body `{"action": "add" \| "remove"}` → 200 / 404 / 409 / 502 |
+| GET    | `/signers`              | List auto-signers and whether they are running                    |
+| POST   | `/signers/roomspot`     | Start the Roomspot auto-signer (filter via query + `period_seconds`) |
+| DELETE | `/signers/roomspot`     | Stop the Roomspot auto-signer                                      |
 
-        rooms = await api.get_rooms(session)
-        for room in rooms:
-            await api.perform_available_room_action(session, room)
+Examples:
+
+```bash
+# rooms under €800 with a private kitchen
+curl "http://127.0.0.1:8000/rooms?max_price=800&kitchen=true"
+
+# sign up for room 20361
+curl -X POST http://127.0.0.1:8000/rooms/20361/react \
+  -H "Content-Type: application/json" -d '{"action": "add"}'
+
+# auto-sign matching rooms every 60 seconds
+curl -X POST "http://127.0.0.1:8000/signers/roomspot?max_price=800&kitchen=true&period_seconds=60"
 ```
 
-### Filtering
+### Filtering in code
 
-Use `RoomFilter` to select rooms (`-1` means "no limit"):
+`RoomFilter` selects rooms (`-1` means "no limit"):
 
 ```python
-from notbehomeless.service.room_filter import RoomFilter
+from notbehomeless.models.room_filter import RoomFilter
 
 room_filter = RoomFilter(max_price=800, min_size=15, kitchen=True)
 matching = [r for r in rooms if room_filter.matches(r)]
@@ -113,30 +128,50 @@ matching = [r for r in rooms if room_filter.matches(r)]
 ## Logging
 
 Logging is configured centrally in
-[`utils/logging_config.py`](src/notbehomeless/config/logging_config.py). Call
-`setup_logging()` once at startup; raise verbosity with `setup_logging(logging.DEBUG)`.
-Library modules only obtain a logger via `logging.getLogger(__name__)`.
+[`config/logging_config.py`](src/notbehomeless/config/logging_config.py). Call
+`setup_logging()` once at startup (the app lifespan already does); raise verbosity
+with `setup_logging(logging.DEBUG)`. Library modules only obtain a logger via
+`logging.getLogger(__name__)`.
 
 ## Project structure
 
 ```
 src/notbehomeless/
-├── models/            # domain models (Room, Website, AllocationType)
-├── service/           # logic over models (filtering, auto-signing, status)
-├── roomspot/          # Roomspot client (one package per platform;
-│   ├── api.py         #   kamernet/ and papirus/ will follow the same layout)
-│   ├── authorizer.py  # login + session validation
-│   ├── room_parser.py # API JSON -> Room
-│   ├── room_reactor.py# reactions + reaction data
-│   └── data/          # request payload (git-ignored personal profile)
-├── utils/             # cookies, JWT token, file loading, config, logging
-└── storage/           # cached cookies (git-ignored)
+├── main.py                # entry point: app factory, lifespan, uvicorn runner
+├── api/                   # HTTP layer (FastAPI)
+│   ├── routers/           #   /health, /rooms, /signers
+│   ├── schemas/           #   Pydantic DTOs (RoomOut, ReactionRequest, ...)
+│   └── dependencies.py    #   Depends() providers + Annotated aliases
+├── models/                # domain: Room, Website, RoomFilter, AllocationType,
+│                          #   BaseApi (per-site client contract), AppException
+├── service/               # cross-site logic: RoomAutoSigner, AutoSignerManager
+├── websites/              # one package per platform
+│   └── roomspot/          #   api.py, service.py, authorizer, parser, reactor,
+│       └── data/          #   request payload (git-ignored personal profile)
+├── config/                # logging configuration
+├── factory/               # FastAPI wiring (exception handlers)
+├── utils/                 # cookies, JWT token, file loading, env config
+└── storage/               # cached cookies (git-ignored)
 ```
+
+Errors are reported through an `AppException` hierarchy (each exception carries its
+HTTP `status_code` and the `Website` it belongs to) and mapped to JSON responses by a
+single FastAPI exception handler.
 
 ## Roadmap
 
+- [x] Roomspot client (auth, rooms, reactions)
+- [x] REST API (FastAPI)
+- [x] Auto-signer with start/stop endpoints
 - [ ] Kamernet platform support
 - [ ] Papirus platform support
-- [ ] Shared platform interface (common `authorize` / `get_all_rooms` / reaction API)
-- [ ] Auto-signer service (`RoomAutoSigner`) — react to filtered rooms automatically
-- [ ] Test coverage (`RoomFilter`, parsers)
+- [ ] Shared platform service interface (dispatch by `Website`)
+- [ ] Web frontend (Vue)
+- [ ] Test coverage (`RoomFilter`, parsers, auto-signer)
+
+## Security notes
+
+- `.env`, `hidden_filters.json` and `storage/` (session cookies) are git-ignored — they
+  contain credentials, personal data, and active sessions. Keep them local.
+- Cookies are stored with `pickle`; only load cookie files you created yourself.
+- The API has no authentication of its own — run it locally, do not expose it publicly.

@@ -1,7 +1,7 @@
 """Request DTOs for room reactions."""
 from pydantic import BaseModel
 
-from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+from notbehomeless.websites.roomspot.room_reaction_action import RoomReactionAction
 
 
 class ReactionRequest(BaseModel):

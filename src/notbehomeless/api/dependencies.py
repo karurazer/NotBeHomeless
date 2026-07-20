@@ -10,8 +10,8 @@ from typing import Annotated
 import aiohttp
 from fastapi import Depends, Query, Request
 
-from notbehomeless.roomspot.api import RoomspotApi
-from notbehomeless.roomspot.service import RoomspotService
+from notbehomeless.websites.roomspot.api import RoomspotApi
+from notbehomeless.websites.roomspot.service import RoomspotService
 from notbehomeless.models.room_filter import RoomFilter
 from notbehomeless.service.auto_signer_manager import AutoSignerManager
 

@@ -6,7 +6,7 @@ from urllib.parse import parse_qs
 import aiohttp
 from yarl import URL
 from notbehomeless.models.room import Room
-from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+from notbehomeless.websites.roomspot.room_reaction_action import RoomReactionAction
 
 logger = logging.getLogger(__name__)
 

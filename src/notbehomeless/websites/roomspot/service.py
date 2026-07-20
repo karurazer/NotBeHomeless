@@ -2,13 +2,13 @@
 import aiohttp
 
 from notbehomeless.models.room import Room
-from notbehomeless.roomspot.api import RoomspotApi
-from notbehomeless.roomspot.exception import (
+from notbehomeless.websites.roomspot.api import RoomspotApi
+from notbehomeless.websites.roomspot.exception import (
     ActionUnavailableError,
     RoomNotFoundError,
     RoomNotReactableError,
 )
-from notbehomeless.roomspot.room_reaction_action import RoomReactionAction
+from notbehomeless.websites.roomspot.room_reaction_action import RoomReactionAction
 from notbehomeless.models.room_filter import RoomFilter
 
 

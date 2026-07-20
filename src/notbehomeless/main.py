@@ -12,7 +12,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from notbehomeless.models.website import Website
-from notbehomeless.roomspot.api import RoomspotApi
+from notbehomeless.websites.roomspot.api import RoomspotApi
 from notbehomeless.service.auto_signer_manager import AutoSignerManager
 from notbehomeless.utils.config import login_data
 from notbehomeless.config.logging_config import setup_logging

@@ -2,7 +2,7 @@ import aiohttp
 import logging
 
 from notbehomeless.models.website import Website
-from src.notbehomeless.roomspot.api import RoomspotApi
+from notbehomeless.websites.roomspot.api import RoomspotApi
 from notbehomeless.utils.config import login_data
 
 logger = logging.getLogger(__name__)
