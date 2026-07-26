@@ -49,11 +49,15 @@ def create_app() -> FastAPI:
     """Build and configure the FastAPI application."""
     fastapi = FastAPI(title="notBeHomeless", version="0.1.0", lifespan=lifespan)
 
+    from fastapi import APIRouter
     from notbehomeless.api.routers import health, rooms, signers
 
-    fastapi.include_router(health.router)
-    fastapi.include_router(rooms.router)
-    fastapi.include_router(signers.router)
+    api_router = APIRouter(prefix="/api")
+    api_router.include_router(health.router)
+    api_router.include_router(rooms.router)
+    api_router.include_router(signers.router)
+
+    fastapi.include_router(api_router)
 
     init_exceptions_handler(fastapi)
 

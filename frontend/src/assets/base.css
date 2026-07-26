@@ -20,9 +20,9 @@
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
-
-/* semantic color variables for this project */
 :root {
+  /* semantic color variables for this project */
+
   --color-background: var(--vt-c-white);
   --color-background-soft: var(--vt-c-white-soft);
   --color-background-mute: var(--vt-c-white-mute);
@@ -34,6 +34,18 @@
   --color-text: var(--vt-c-text-light-1);
 
   --section-gap: 160px;
+
+  --color-error: #ff3b30;
+  --color-error-bg: rgba(255, 59, 48, 0.12);
+  --color-error-border: rgba(255, 59, 48, 0.35);
+
+  --color-success: #1a7f37;
+  --color-success-bg: rgba(46, 160, 67, 0.12);
+  --color-success-border: rgba(46, 160, 67, 0.35);
+
+  --color-warning: #9a6700;
+  --color-warning-bg: rgba(154, 103, 0, 0.12);
+  --color-warning-border: rgba(154, 103, 0, 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,6 +59,18 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+
+    --color-error: #f85149;
+    --color-error-bg: rgba(248, 81, 73, 0.15);
+    --color-error-border: rgba(248, 81, 73, 0.4);
+
+    --color-success: #3fb950;
+    --color-success-bg: rgba(63, 185, 80, 0.15);
+    --color-success-border: rgba(63, 185, 80, 0.4);
+
+    --color-warning: #d29922;
+    --color-warning-bg: rgba(210, 153, 34, 0.15);
+    --color-warning-border: rgba(210, 153, 34, 0.4);
   }
 }
 
@@ -83,4 +107,33 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.error {
+  color: var(--color-error);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  background-color: var(--color-background-soft);
+  color: var(--color-heading);
+  transition: border-color 0.25s ease, opacity 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--vt-c-indigo);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--vt-c-indigo);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
